@@ -1,12 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { GameScene } from './components/GameScene';
 import { TextureSelector } from './components/TextureSelector';
 import { ChatOverlay } from './components/ChatOverlay';
 import { useStore } from './hooks/useStore';
+import { TextureType } from './types';
 
 const App: React.FC = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const cubeCount = useStore((state) => state.cubes.length);
+  const currentTexture = useStore((state) => state.texture);
+  const setTexture = useStore((state) => state.setTexture);
+
+  // Mouse wheel to cycle through block types
+  useEffect(() => {
+    const textures: TextureType[] = ['dirt', 'grass', 'glass', 'wood', 'log'];
+
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const currentIndex = textures.indexOf(currentTexture);
+      let newIndex: number;
+
+      if (e.deltaY > 0) {
+        // Scroll down - next texture
+        newIndex = (currentIndex + 1) % textures.length;
+      } else {
+        // Scroll up - previous texture
+        newIndex = (currentIndex - 1 + textures.length) % textures.length;
+      }
+
+      setTexture(textures[newIndex]);
+    };
+
+    window.addEventListener('wheel', handleWheel, { passive: false });
+    return () => window.removeEventListener('wheel', handleWheel);
+  }, [currentTexture, setTexture]);
 
   return (
     <div className="relative w-full h-full bg-slate-900 text-white font-sans">
@@ -26,7 +53,7 @@ const App: React.FC = () => {
       <div className="absolute top-4 left-4 z-20 pointer-events-none">
         <h1 className="text-2xl font-bold drop-shadow-md tracking-tighter">ReactCraft <span className="text-sky-400">AI</span></h1>
         <p className="text-xs text-slate-300 drop-shadow-md mt-1">
-          WASD to Move • Space to Jump • Click to Mine • Alt+Click to Build
+          WASD to Move • Space to Jump • Click to Mine • Alt+Click to Build • Scroll to Switch
         </p>
         <p className="text-xs text-slate-300 drop-shadow-md mt-1">
           <span className="text-yellow-400 font-bold">6</span> Dog • <span className="text-yellow-400 font-bold">7</span> Wolf • <span className="text-red-500 font-bold">8</span> Zombie

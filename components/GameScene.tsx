@@ -7,6 +7,7 @@ import { Ground } from './Ground';
 import { Cube } from './Cube';
 import { Animal } from './Animal';
 import { Effects } from './Effects';
+import { BlockPreview } from './BlockPreview';
 import { useStore } from '../hooks/useStore';
 import { useKeyboard } from '../hooks/useKeyboard';
 import * as THREE from 'three';
@@ -42,6 +43,8 @@ const SpawnController = () => {
 export const GameScene: React.FC = () => {
   const cubes = useStore((state) => state.cubes);
   const animals = useStore((state) => state.animals);
+  const previewPosition = useStore((state) => state.previewPosition);
+  const activeTexture = useStore((state) => state.texture);
 
   return (
     <Canvas shadows camera={{ fov: 45 }}>
@@ -71,7 +74,9 @@ export const GameScene: React.FC = () => {
             />
         ))}
       </Physics>
-      
+
+      {previewPosition && <BlockPreview position={previewPosition} texture={activeTexture} />}
+
       <PointerLockControls />
     </Canvas>
   );

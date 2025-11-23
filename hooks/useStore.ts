@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { nanoid } from 'nanoid';
 import { Cube, TextureType, Particle, Animal, AnimalType } from '../types';
+import { debounce } from '../utils/debounce';
 
 // Mutable ref for player position to avoid React re-render cycles on every frame
 export const playerRef = { current: [0, 0, 0] };
@@ -10,6 +11,7 @@ interface StoreState {
   cubes: Cube[];
   particles: Particle[];
   animals: Animal[];
+  previewPosition: [number, number, number] | null;
   addCube: (x: number, y: number, z: number) => void;
   removeCube: (x: number, y: number, z: number) => void;
   setTexture: (texture: TextureType) => void;
@@ -20,10 +22,16 @@ interface StoreState {
   addAnimal: (x: number, y: number, z: number, type: AnimalType) => void;
   removeAnimal: (id: string) => void;
   damageAnimal: (id: string, damage: number) => void;
+  setPreviewPosition: (pos: [number, number, number] | null) => void;
 }
 
 const getLocalStorage = (key: string) => JSON.parse((window as any).localStorage?.getItem(key) || '[]');
 const setLocalStorage = (key: string, value: any) => (window as any).localStorage?.setItem(key, JSON.stringify(value));
+
+// Debounced save to prevent excessive localStorage writes (saves 1 second after last change)
+const debouncedSave = debounce((cubes: Cube[]) => {
+  setLocalStorage('world', cubes);
+}, 1000);
 
 export const useStore = create<StoreState>((set) => ({
   texture: 'dirt',
@@ -33,6 +41,7 @@ export const useStore = create<StoreState>((set) => ({
       { id: 'initial-dog', pos: [5, 1, 5], type: 'dog', rotation: 0, health: 1 },
       { id: 'initial-wolf', pos: [-5, 1, 5], type: 'wolf', rotation: 0, health: 1 }
   ],
+  previewPosition: null,
   addCube: (x, y, z) => {
     set((state) => {
         const newCubes = [
@@ -43,7 +52,7 @@ export const useStore = create<StoreState>((set) => ({
                 texture: state.texture
             }
         ];
-        setLocalStorage('world', newCubes);
+        debouncedSave(newCubes);
         return { cubes: newCubes };
     });
   },
@@ -53,7 +62,7 @@ export const useStore = create<StoreState>((set) => ({
             const [cx, cy, cz] = cube.pos;
             return cx !== x || cy !== y || cz !== z;
         });
-        setLocalStorage('world', newCubes);
+        debouncedSave(newCubes);
         return { cubes: newCubes };
     });
   },
@@ -106,5 +115,8 @@ export const useStore = create<StoreState>((set) => ({
         const livingAnimals = updatedAnimals.filter(a => a.health > 0);
         return { animals: livingAnimals };
     });
+  },
+  setPreviewPosition: (pos) => {
+    set(() => ({ previewPosition: pos }));
   }
 }));

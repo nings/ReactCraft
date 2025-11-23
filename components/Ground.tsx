@@ -12,7 +12,8 @@ export const Ground: React.FC = () => {
   }));
 
   const addCube = useStore((state) => state.addCube);
-  
+  const setPreviewPosition = useStore((state) => state.setPreviewPosition);
+
   const texture = useTexture(textureImg.grass);
   
   const grassTexture = useMemo(() => {
@@ -27,11 +28,22 @@ export const Ground: React.FC = () => {
   return (
     <mesh
       ref={ref as any}
+      onPointerMove={(e) => {
+        e.stopPropagation();
+        if (e.point.y < 0.1) {
+          const previewPos: [number, number, number] = [Math.round(e.point.x), 0, Math.round(e.point.z)];
+          setPreviewPosition(previewPos);
+        }
+      }}
+      onPointerOut={(e) => {
+        e.stopPropagation();
+        setPreviewPosition(null);
+      }}
       onClick={(e) => {
         e.stopPropagation();
         // Prevent adding cubes under the ground if clicked incorrectly
         // Add cube above the ground click point
-        if (e.point.y < 0.1) { 
+        if (e.point.y < 0.1) {
            addCube(Math.round(e.point.x), 0, Math.round(e.point.z));
         }
       }}

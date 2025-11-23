@@ -23,6 +23,7 @@ export const Cube: React.FC<CubeProps> = ({ position, texture }) => {
   const removeCube = useStore((state) => state.removeCube);
   const addEffect = useStore((state) => state.addEffect);
   const activeTextureType = useStore(state => state.texture);
+  const setPreviewPosition = useStore(state => state.setPreviewPosition);
 
   // Load texture from our generated data URLs
   const activeTexture = useTexture(textureImg[texture]);
@@ -40,10 +41,25 @@ export const Cube: React.FC<CubeProps> = ({ position, texture }) => {
       onPointerMove={(e) => {
         e.stopPropagation();
         setIsHovered(true);
+
+        // Calculate preview position based on hovered face
+        const clickedFace = Math.floor(e.faceIndex! / 2);
+        const { x, y, z } = ref.current!.position;
+        let newPos: [number, number, number] = [x, y, z];
+
+        if (clickedFace === 0) newPos = [x + 1, y, z];
+        else if (clickedFace === 1) newPos = [x - 1, y, z];
+        else if (clickedFace === 2) newPos = [x, y + 1, z];
+        else if (clickedFace === 3) newPos = [x, y - 1, z];
+        else if (clickedFace === 4) newPos = [x, y, z + 1];
+        else if (clickedFace === 5) newPos = [x, y, z - 1];
+
+        setPreviewPosition(newPos);
       }}
       onPointerOut={(e) => {
         e.stopPropagation();
         setIsHovered(false);
+        setPreviewPosition(null);
       }}
       onClick={(e) => {
         e.stopPropagation();
