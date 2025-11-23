@@ -1,0 +1,5 @@
+{
+  "name": "ReactCraft AI",
+  "description": "A 3D voxel sandbox game powered by React Three Fiber and Gemini AI. Build your world and ask the AI Architect for creative guidance.",
+  "requestFramePermissions": []
+}
